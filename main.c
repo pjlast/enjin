@@ -32,8 +32,68 @@ SDL_Texture *gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 
 SDL_Texture *gCurrentSurface = NULL;
 
+typedef struct {
+	
+} game_state;
+
+typedef struct {
+	float x;
+	float y;
+} component_position;
+
+typedef struct {
+	SDL_Texture *texture;
+} component_draw;
+
+typedef struct {
+	component_position *position;
+	component_draw *draw;
+} components_t;
+
+typedef struct {
+	unsigned int uuid;
+	components_t components;
+} entity;
+
+void addComponentPosition(entity *e, int x, int y) {
+	e -> components.position = malloc(sizeof(component_position));
+	e -> components.position -> x = x;
+	e -> components.position -> y = y;
+}
+ 
+void addComponentDraw(entity *e, SDL_Texture *texture) {
+	e -> components.draw = malloc(sizeof(component_draw));
+	e->components.draw->texture = texture;
+}
+
+void freeEntity(entity *e) {
+if (e -> components.position) free(e -> components.position);
+if (e -> components.draw) free(e -> components.draw);
+}
+
+int updatePositionSystem(entity *e) {
+if (!e -> components.position) return 1;
+e -> components.position -> x++;
+}
+ 
+int DrawSystem(entity *e) {
+if (!e -> components.position || ! e -> components.draw) return 1;
+SDL_RenderClear(gRenderer);
+SDL_Rect DestR;
+DestR.x = e->components.position->x;
+DestR.y = e->components.position->y;
+DestR.w = 640;
+DestR.h = 480;
+
+SDL_RenderCopy(gRenderer, e->components.draw->texture, NULL, &DestR);
+SDL_RenderPresent(gRenderer);
+} 
+
 int main(int argc, char *args[])
 {
+	entity image;
+	addComponentPosition(&image, 0, 0);
+	addComponentDraw(&image, gCurrentSurface);
 	if (!init())
 		printf("Failed to initialize!\n");
 	else {
@@ -42,7 +102,7 @@ int main(int argc, char *args[])
 		else {
 			bool quit = false;
 			SDL_Event e;
-			gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
+			image.components.draw->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
 
 			while (!quit) {
 				while (SDL_PollEvent(&e) != 0) {
@@ -51,30 +111,28 @@ int main(int argc, char *args[])
 					else if (e.type == SDL_KEYDOWN) {
 						switch(e.key.keysym.sym) {
 						case SDLK_UP:
-							gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_UP];
+							image.components.draw->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_UP];
 							break;
 						case SDLK_DOWN:
-							gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN];
+							image.components.draw->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN];
 							break;
 						case SDLK_LEFT:
-							gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT];
+							image.components.draw->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT];
 							break;
 						case SDLK_RIGHT:
-							gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT];
+							image.components.draw->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT];
 							break;
 						default:
-							gCurrentSurface = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
+							image.components.draw->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
 						}
 					}
 				}
-				SDL_RenderClear(gRenderer);
-				SDL_RenderCopy(gRenderer, gCurrentSurface, NULL,
-				               NULL);
-				SDL_RenderPresent(gRenderer);
+				DrawSystem(&image);
 			}
 		}
 	}
 
+	freeEntity(&image);
 	cleanup();
 	return 0;
 }
