@@ -33,60 +33,97 @@ SDL_Texture *gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 SDL_Texture *gCurrentSurface = NULL;
 
 typedef struct {
-	
+	generational_index_t *entities;
+	int num_entities;
 } game_state;
+
+typedef struct {
+	int index,
+	int generation
+} generational_index_t;
+
+typedef struct {
+	bool is_live,
+	int generation
+} allocator_entry_t;
+
+typedef struct {
+	allocator_entry_t *entries,
+	int *free;
+	int num_free;
+} generational_index_allocator_t;
+
+generational_index_t allocate(generational_index_allocator_t *allocator) {
+	generational_index_t gi;
+	gi.index = 0;
+	gi.generation = 0;
+
+	return gi;
+}
+
+bool deallocate(generational_index_allocator_t *allocator,
+                generational_index_t *index) {
+
+}
+
+bool is_live(generational_index_allocator_t allocator,
+             generational_index_t index) {
+	
+}
 
 typedef struct {
 	float x;
 	float y;
-} component_position;
+} position_t;
 
 typedef struct {
 	SDL_Texture *texture;
-} component_draw;
+} draw_t;
 
 typedef struct {
-	component_position *position;
-	component_draw *draw;
+	position_t *position;
+	draw_t *draw;
 } components_t;
 
 typedef struct {
 	unsigned int uuid;
 	components_t components;
-} entity;
+} entity_t;
 
-void addComponentPosition(entity *e, int x, int y) {
-	e -> components.position = malloc(sizeof(component_position));
-	e -> components.position -> x = x;
-	e -> components.position -> y = y;
+void addComponentPosition(entity_t *entity, int x, int y) {
+	entity->components.position = malloc(sizeof(component_position));
+	entity->components.position->x = x;
+	entity->components.position->y = y;
 }
  
 void addComponentDraw(entity *e, SDL_Texture *texture) {
-	e -> components.draw = malloc(sizeof(component_draw));
+	e->components.draw = malloc(sizeof(component_draw));
 	e->components.draw->texture = texture;
 }
 
 void freeEntity(entity *e) {
-if (e -> components.position) free(e -> components.position);
-if (e -> components.draw) free(e -> components.draw);
+	if (e->components.position)
+		free(e->components.position);
+	if (e->components.draw)
+		free(e->components.draw);
 }
 
 int updatePositionSystem(entity *e) {
-if (!e -> components.position) return 1;
-e -> components.position -> x++;
+if (!e->components.position) return 1;
+	e->components.position->x++;
 }
  
 int DrawSystem(entity *e) {
 if (!e -> components.position || ! e -> components.draw) return 1;
-SDL_RenderClear(gRenderer);
-SDL_Rect DestR;
-DestR.x = e->components.position->x;
-DestR.y = e->components.position->y;
-DestR.w = 640;
-DestR.h = 480;
+	SDL_RenderClear(gRenderer);
+	SDL_Rect DestR;
+	DestR.x = e->components.position->x;
+	DestR.y = e->components.position->y;
+	DestR.w = 640;
+	DestR.h = 480;
 
-SDL_RenderCopy(gRenderer, e->components.draw->texture, NULL, &DestR);
-SDL_RenderPresent(gRenderer);
+	SDL_RenderCopy(gRenderer, e->components.draw->texture, NULL, &DestR);
+	SDL_RenderPresent(gRenderer);
 } 
 
 int main(int argc, char *args[])
