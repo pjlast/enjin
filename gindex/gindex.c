@@ -1,4 +1,4 @@
-#include "generational_index.h"
+#include "gindex.h"
 #include <stdbool.h>
 #include <stdlib.h>
 #include <stdint.h>

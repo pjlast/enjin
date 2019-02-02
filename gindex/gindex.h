@@ -1,5 +1,5 @@
-#ifndef GENERATIONAL_INDEX_H
-#define GENERATIONAL_INDEX_H
+#ifndef GINDEX_H
+#define GINDEX_H
 
 #include <stdbool.h>
 #include <stdint.h>
