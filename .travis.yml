@@ -4,7 +4,6 @@ before_install:
   - sudo apt-get install -y libegl1-mesa-dev libgles2-mesa-dev
   - sudo apt-get install -y make libsdl2-dev libsdl2-image-dev
 script:
-  - make test
-  - make build
+  - make tests
 on:
   branch: master
