@@ -1,0 +1,7 @@
+install: make sdl2 sdl2_image
+compiler: gcc
+script:
+  - make test
+  - make build
+on:
+  branch: master
