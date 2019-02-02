@@ -96,9 +96,10 @@ int main(int argc, char *args[])
 	struct game_state gs;
 	gs.entity_allocator.num_entries = 0;
 	gs.entity_allocator.num_free = 0;
-	struct gindex image = galloc(&gs.entity_allocator);
-	addComponentPosition(&gs, image, 0, 0);
-	addComponentDraw(&gs, image, gCurrentSurface);
+	gs.entities = malloc(sizeof(struct gindex));
+	gs.entities[0] = galloc(&gs.entity_allocator);
+	addComponentPosition(&gs, gs.entities[0], 0, 0);
+	addComponentDraw(&gs, gs.entities[0], gCurrentSurface);
 	if (!init())
 		printf("Failed to initialize!\n");
 	else {
@@ -107,7 +108,7 @@ int main(int argc, char *args[])
 		else {
 			bool quit = false;
 			SDL_Event e;
-			gs.draws[image.index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
+			gs.draws[gs.entities[0].index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
 
 			while (!quit) {
 				while (SDL_PollEvent(&e) != 0) {
@@ -116,23 +117,26 @@ int main(int argc, char *args[])
 					else if (e.type == SDL_KEYDOWN) {
 						switch(e.key.keysym.sym) {
 						case SDLK_UP:
-							gs.draws[image.index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_UP];
+							gs.draws[gs.entities[0].index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_UP];
 							break;
 						case SDLK_DOWN:
-							gs.draws[image.index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN];
+							gs.draws[gs.entities[0].index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN];
 							break;
 						case SDLK_LEFT:
-							gs.draws[image.index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT];
+							gs.draws[gs.entities[0].index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT];
 							break;
 						case SDLK_RIGHT:
-							gs.draws[image.index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT];
+							gs.draws[gs.entities[0].index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT];
 							break;
 						default:
-							gs.draws[image.index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
+							gs.draws[gs.entities[0].index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
 						}
 					}
 				}
-				DrawSystem(&gs, image);
+				for (int i = 0; i < gs.entity_allocator.num_entries; i++) {
+					if (is_live(gs.entity_allocator, gs.entities[i]))
+						DrawSystem(&gs, gs.entities[i]);
+				}
 			}
 		}
 	}
