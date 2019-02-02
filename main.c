@@ -3,6 +3,7 @@
 #include <SDL2/SDL_image.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include "gindex/gindex.h"
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
@@ -33,9 +34,6 @@ SDL_Texture *gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 SDL_Texture *gCurrentSurface = NULL;
 
 typedef struct {
-} game_state;
-
-typedef struct {
 	float x;
 	float y;
 } component_position;
@@ -44,57 +42,63 @@ typedef struct {
 	SDL_Texture *texture;
 } component_draw;
 
-typedef struct {
-	component_position *position;
-	component_draw *draw;
-} components_t;
+struct game_state {
+	struct gindex_allocator entity_allocator;
+	struct gindex *entities;
+	component_position *positions;
+	component_draw *draws;
+};
 
-typedef struct {
-	unsigned int uuid;
-	components_t components;
-} entity;
-
-void addComponentPosition(entity *e, int x, int y) {
-	e->components.position = malloc(sizeof(component_position));
-	e->components.position->x = x;
-	e->components.position->y = y;
+void addComponentPosition(struct game_state *gs, struct gindex entity, int x,
+                          int y)
+{
+	gs->positions = malloc(sizeof(component_position));
+	gs->positions[entity.index].x = x;
+	gs->positions[entity.index].y = y;
 }
  
-void addComponentDraw(entity *e, SDL_Texture *texture) {
-	e->components.draw = malloc(sizeof(component_draw));
-	e->components.draw->texture = texture;
+void addComponentDraw(struct game_state *gs, struct gindex entity,
+                      SDL_Texture *texture) {
+	gs->draws = malloc(sizeof(component_draw));
+	gs->draws[entity.index].texture = texture;
 }
 
-void freeEntity(entity *e) {
-	if (e->components.position)
-		free(e->components.position);
-	if (e->components.draw)
-		free(e->components.draw);
-}
+//void freeEntity(entity *e) {
+//	if (e->components.position)
+//		free(e->components.position);
+//	if (e->components.draw)
+//		free(e->components.draw);
+//}
 
-int updatePositionSystem(entity *e) {
-if (!e->components.position) return 1;
-	e->components.position->x++;
+int updatePositionSystem(struct game_state *gs, struct gindex entity) {
+	if (!gs->positions)
+		return 1;
+	gs->positions[entity.index].x++;
 }
  
-int DrawSystem(entity *e) {
-if (!e -> components.position || ! e -> components.draw) return 1;
+int DrawSystem(struct game_state *gs, struct gindex entity) {
+	if (!gs->positions || !gs->draws)
+		return 1;
 	SDL_RenderClear(gRenderer);
 	SDL_Rect DestR;
-	DestR.x = e->components.position->x;
-	DestR.y = e->components.position->y;
+	DestR.x = gs->positions[entity.index].x;
+	DestR.y = gs->positions[entity.index].y;
 	DestR.w = 640;
 	DestR.h = 480;
 
-	SDL_RenderCopy(gRenderer, e->components.draw->texture, NULL, &DestR);
+	SDL_RenderCopy(gRenderer, gs->draws[entity.index].texture, NULL,
+	               &DestR);
 	SDL_RenderPresent(gRenderer);
 } 
 
 int main(int argc, char *args[])
 {
-	entity image;
-	addComponentPosition(&image, 0, 0);
-	addComponentDraw(&image, gCurrentSurface);
+	struct game_state gs;
+	gs.entity_allocator.num_entries = 0;
+	gs.entity_allocator.num_free = 0;
+	struct gindex image = galloc(&gs.entity_allocator);
+	addComponentPosition(&gs, image, 0, 0);
+	addComponentDraw(&gs, image, gCurrentSurface);
 	if (!init())
 		printf("Failed to initialize!\n");
 	else {
@@ -103,7 +107,7 @@ int main(int argc, char *args[])
 		else {
 			bool quit = false;
 			SDL_Event e;
-			image.components.draw->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
+			gs.draws[image.index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
 
 			while (!quit) {
 				while (SDL_PollEvent(&e) != 0) {
@@ -112,28 +116,28 @@ int main(int argc, char *args[])
 					else if (e.type == SDL_KEYDOWN) {
 						switch(e.key.keysym.sym) {
 						case SDLK_UP:
-							image.components.draw->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_UP];
+							gs.draws[image.index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_UP];
 							break;
 						case SDLK_DOWN:
-							image.components.draw->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN];
+							gs.draws[image.index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN];
 							break;
 						case SDLK_LEFT:
-							image.components.draw->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT];
+							gs.draws[image.index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT];
 							break;
 						case SDLK_RIGHT:
-							image.components.draw->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT];
+							gs.draws[image.index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT];
 							break;
 						default:
-							image.components.draw->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
+							gs.draws[image.index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
 						}
 					}
 				}
-				DrawSystem(&image);
+				DrawSystem(&gs, image);
 			}
 		}
 	}
 
-	freeEntity(&image);
+	//freeEntity(&image);
 	cleanup();
 	return 0;
 }
