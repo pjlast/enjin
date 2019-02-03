@@ -22,8 +22,9 @@ int main(int argc, char *args[])
 	generational_index_allocator_t giat;
 	giat.free = malloc(sizeof(int));
 	giat.free[0] = 1;
-	giat.free = realloc(giat.free, sizeof(int) * 2);
+	giat.free = realloc(giat.free, sizeof(int) * 3);
 	giat.free[1] = 2;
+	giat.free[2] = NULL;
 
 	printf("%d %d", giat.free[0], giat.free[1]);
 	if (giat.free) {

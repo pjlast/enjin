@@ -45,22 +45,22 @@ typedef struct {
 struct game_state {
 	struct gindex_allocator entity_allocator;
 	struct gindex *entities;
-	component_position *positions;
-	component_draw *draws;
+	component_position **positions;
+	component_draw **draws;
 };
 
 void addComponentPosition(struct game_state *gs, struct gindex entity, int x,
                           int y)
 {
-	gs->positions = malloc(sizeof(component_position));
-	gs->positions[entity.index].x = x;
-	gs->positions[entity.index].y = y;
+	*(gs->positions) = malloc(sizeof(component_position));
+	gs->positions[entity.index]->x = x;
+	gs->positions[entity.index]->y = y;
 }
  
 void addComponentDraw(struct game_state *gs, struct gindex entity,
                       SDL_Texture *texture) {
-	gs->draws = malloc(sizeof(component_draw));
-	gs->draws[entity.index].texture = texture;
+	*(gs->draws) = malloc(sizeof(component_draw));
+	gs->draws[entity.index]->texture = texture;
 }
 
 //void freeEntity(entity *e) {
@@ -73,20 +73,21 @@ void addComponentDraw(struct game_state *gs, struct gindex entity,
 int updatePositionSystem(struct game_state *gs, struct gindex entity) {
 	if (!gs->positions)
 		return 1;
-	gs->positions[entity.index].x++;
+	gs->positions[entity.index]->x++;
 }
  
 int DrawSystem(struct game_state *gs, struct gindex entity) {
-	if (!gs->positions || !gs->draws)
+	if (!gs->positions[0] || !gs->draws[0])
+		printf("Something");
 		return 1;
 	SDL_RenderClear(gRenderer);
 	SDL_Rect DestR;
-	DestR.x = gs->positions[entity.index].x;
-	DestR.y = gs->positions[entity.index].y;
+	DestR.x = gs->positions[entity.index]->x;
+	DestR.y = gs->positions[entity.index]->y;
 	DestR.w = 640;
 	DestR.h = 480;
 
-	SDL_RenderCopy(gRenderer, gs->draws[entity.index].texture, NULL,
+	SDL_RenderCopy(gRenderer, gs->draws[entity.index]->texture, NULL,
 	               &DestR);
 	SDL_RenderPresent(gRenderer);
 } 
@@ -94,12 +95,15 @@ int DrawSystem(struct game_state *gs, struct gindex entity) {
 int main(int argc, char *args[])
 {
 	struct game_state gs;
+	gs.positions = malloc(sizeof(component_position*));
+	gs.draws = malloc(sizeof(component_draw*));
 	gs.entity_allocator.num_entries = 0;
 	gs.entity_allocator.num_free = 0;
 	gs.entities = malloc(sizeof(struct gindex));
 	gs.entities[0] = galloc(&gs.entity_allocator);
 	addComponentPosition(&gs, gs.entities[0], 0, 0);
-	addComponentDraw(&gs, gs.entities[0], gCurrentSurface);
+	//gs.draws[0] = NULL;
+	//addComponentDraw(&gs, gs.entities[0], gCurrentSurface);
 	if (!init())
 		printf("Failed to initialize!\n");
 	else {
@@ -108,7 +112,7 @@ int main(int argc, char *args[])
 		else {
 			bool quit = false;
 			SDL_Event e;
-			gs.draws[gs.entities[0].index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
+			//gs.draws[gs.entities[0].index]->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
 
 			while (!quit) {
 				while (SDL_PollEvent(&e) != 0) {
@@ -117,19 +121,20 @@ int main(int argc, char *args[])
 					else if (e.type == SDL_KEYDOWN) {
 						switch(e.key.keysym.sym) {
 						case SDLK_UP:
-							gs.draws[gs.entities[0].index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_UP];
+							//gs.draws[gs.entities[0].index]->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_UP];
 							break;
 						case SDLK_DOWN:
-							gs.draws[gs.entities[0].index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN];
+							//gs.draws[gs.entities[0].index]->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DOWN];
 							break;
 						case SDLK_LEFT:
-							gs.draws[gs.entities[0].index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT];
+							//gs.draws[gs.entities[0].index]->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_LEFT];
 							break;
 						case SDLK_RIGHT:
-							gs.draws[gs.entities[0].index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT];
+							//gs.draws[gs.entities[0].index]->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_RIGHT];
 							break;
 						default:
-							gs.draws[gs.entities[0].index].texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
+							//gs.draws[gs.entities[0].index]->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
+							break;
 						}
 					}
 				}
