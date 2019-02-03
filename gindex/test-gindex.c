@@ -1,6 +1,5 @@
 #include "../test/unity.h"
 #include "gindex.h"
-#include <stdio.h>
 
 struct gindex_allocator setup_gia(void)
 {

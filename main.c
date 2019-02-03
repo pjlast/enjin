@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include "gindex/gindex.h"
+#include "gamestate/gamestate.h"
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
@@ -32,36 +33,6 @@ SDL_Texture *load_texture(const char *path);
 SDL_Texture *gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 
 SDL_Texture *gCurrentSurface = NULL;
-
-typedef struct {
-	float x;
-	float y;
-} component_position;
-
-typedef struct {
-	SDL_Texture *texture;
-} component_draw;
-
-struct game_state {
-	struct gindex_allocator entity_allocator;
-	struct gindex *entities;
-	component_position **positions;
-	component_draw **draws;
-};
-
-void addComponentPosition(struct game_state *gs, struct gindex entity, int x,
-                          int y)
-{
-	*(gs->positions) = malloc(sizeof(component_position));
-	gs->positions[entity.index]->x = x;
-	gs->positions[entity.index]->y = y;
-}
- 
-void addComponentDraw(struct game_state *gs, struct gindex entity,
-                      SDL_Texture *texture) {
-	*(gs->draws) = malloc(sizeof(component_draw));
-	gs->draws[entity.index]->texture = texture;
-}
 
 //void freeEntity(entity *e) {
 //	if (e->components.position)
@@ -94,7 +65,7 @@ int DrawSystem(struct game_state *gs, struct gindex entity) {
 
 int main(int argc, char *args[])
 {
-	struct game_state gs;
+	struct game_state gs = init_gamestate();
 	gs.positions = malloc(sizeof(component_position*));
 	gs.draws = malloc(sizeof(component_draw*));
 	gs.entity_allocator.num_entries = 0;
