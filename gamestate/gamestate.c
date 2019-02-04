@@ -10,22 +10,31 @@ struct gamestate init_gamestate(void)
 	gs.entity_allocator.num_entries = 0;
 	gs.entity_allocator.num_free = 0;
 	gs.num_components = 0;
-	gs.entities = malloc(sizeof(struct gindex));
-	gs.components = malloc(sizeof(void *)*2);
-	gs.components[0] = malloc(sizeof(struct position**));
-	*((struct position**) gs.components[0]) = malloc(sizeof(struct position*));
-	gs.components[1] = malloc(sizeof(struct draw***));
+	gs.entities = NULL;
+	gs.components = NULL;
 	return gs;
 }
 
 struct gindex create_entity(struct gamestate *gs)
 {
 	struct gindex entity = galloc(&(gs->entity_allocator));
-	if (entity.gen == 0)
+	if (entity.gen == 0) {
 		gs->entities = realloc(gs->entities,
 			sizeof(struct gindex)*gs->entity_allocator.num_entries);
+		for (int i = 0; i < gs->num_components; i++)
+			gs->components[i] = realloc(gs->components[i], gs->entity_allocator.num_entries);
+	}
 	gs->entities[entity.index] = entity;
 	return entity;
+}
+
+int register_component(struct gamestate *gs)
+{
+	gs->num_components++;
+	gs->components = realloc(gs->components, sizeof(void *)*gs->num_components);
+	gs->components[gs->num_components - 1] = malloc(sizeof(void*));
+
+	return (gs->num_components - 1);
 }
 
 void add_position(struct gamestate *gs, struct gindex entity, float x, float y)

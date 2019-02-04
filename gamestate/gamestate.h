@@ -24,5 +24,6 @@ struct gamestate init_gamestate(void);
 struct gindex create_entity(struct gamestate *gs);
 void add_position(struct gamestate *gs, struct gindex, float x, float y);
 void add_draw(struct gamestate *gs, struct gindex entity, SDL_Texture *texture);
+int register_component(struct gamestate *gs);
 
 #endif
