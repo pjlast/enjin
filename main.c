@@ -41,15 +41,14 @@ SDL_Texture *gCurrentSurface = NULL;
 //		free(e->components.draw);
 //}
 
-int updatePositionSystem(struct game_state *gs, struct gindex entity) {
+int updatePositionSystem(struct gamestate *gs, struct gindex entity) {
 	if (!gs->positions)
 		return 1;
 	gs->positions[entity.index]->x++;
 }
  
-int DrawSystem(struct game_state *gs, struct gindex entity) {
-	if (!gs->positions[0] || !gs->draws[0])
-		printf("Something");
+int DrawSystem(struct gamestate *gs, struct gindex entity) {
+	if (!gs->positions[entity.index] || !gs->draws[entity.index])
 		return 1;
 	SDL_RenderClear(gRenderer);
 	SDL_Rect DestR;
@@ -65,24 +64,20 @@ int DrawSystem(struct game_state *gs, struct gindex entity) {
 
 int main(int argc, char *args[])
 {
-	struct game_state gs = init_gamestate();
-	gs.positions = malloc(sizeof(component_position*));
-	gs.draws = malloc(sizeof(component_draw*));
-	gs.entity_allocator.num_entries = 0;
-	gs.entity_allocator.num_free = 0;
-	gs.entities = malloc(sizeof(struct gindex));
-	gs.entities[0] = galloc(&gs.entity_allocator);
-	addComponentPosition(&gs, gs.entities[0], 0, 0);
-	//gs.draws[0] = NULL;
-	//addComponentDraw(&gs, gs.entities[0], gCurrentSurface);
+	struct gamestate gs = init_gamestate();
 	if (!init())
 		printf("Failed to initialize!\n");
 	else {
+		struct gindex image = create_entity(&gs);
+		add_position(&gs, image, 0, 0);
+		add_draw(&gs, image, load_texture("press.bmp"));
 		if (!load_media())
 			printf("Failed to load media!\n");
 		else {
 			bool quit = false;
 			SDL_Event e;
+
+			//add_draw(&gs, image, gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT]);
 			//gs.draws[gs.entities[0].index]->texture = gKeyPressSurfaces[KEY_PRESS_SURFACE_DEFAULT];
 
 			while (!quit) {

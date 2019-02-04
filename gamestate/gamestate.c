@@ -8,6 +8,7 @@ struct gamestate init_gamestate(void)
 	struct gamestate gs;
 	gs.entity_allocator.num_entries = 0;
 	gs.entity_allocator.num_free = 0;
+	gs.entities = malloc(sizeof(struct gindex));
 	gs.positions = malloc(sizeof(struct position*));
 	gs.draws = malloc(sizeof(struct draw*));
 	return gs;
@@ -16,6 +17,10 @@ struct gamestate init_gamestate(void)
 struct gindex create_entity(struct gamestate *gs)
 {
 	struct gindex entity = galloc(&(gs->entity_allocator));
+	if (entity.gen == 0)
+		gs->entities = realloc(gs->entities,
+			sizeof(struct gindex)*gs->entity_allocator.num_entries);
+	gs->entities[entity.index] = entity;
 	return entity;
 }
 
