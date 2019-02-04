@@ -7,6 +7,8 @@ struct gindex_allocator setup_gia(void)
 
 	gia.num_free = 0;
 	gia.num_entries = 0;
+	gia.free = NULL;
+	gia.entries = NULL;
 
 	return gia;
 }

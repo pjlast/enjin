@@ -15,20 +15,15 @@ struct gindex galloc(struct gindex_allocator *allocator)
 		gi.index = index;
 		gi.gen = allocator->entries[index].gen;
 
-		if (allocator->num_free == 0)
-			free(allocator->free);
-		else
-			allocator->free = realloc(allocator->free,
+		allocator->free = realloc(allocator->free,
 				sizeof(uint64_t)*(allocator->num_free));
 
 		return gi;
 	}
 
-	if (allocator->num_entries == 0)
-		allocator->entries = malloc(sizeof(struct gindex_allocator_entry) * (allocator->num_entries + 1));
-	else
-		allocator->entries = realloc(allocator->entries,
-		                             sizeof(struct gindex_allocator_entry) * (allocator->num_entries + 1));
+	allocator->entries = realloc(allocator->entries,
+			sizeof(struct gindex_allocator_entry)*(
+					allocator->num_entries + 1));
 
 	allocator->num_entries++;
 
@@ -50,11 +45,8 @@ bool gfree(struct gindex_allocator *allocator,
 
 	allocator->entries[gi.index].is_live = false;
 
-	if (allocator->num_free == 0)
-		allocator->free = malloc(sizeof(uint64_t));
-	else
-		allocator->free = realloc(allocator->free,
-		                          sizeof(uint64_t)*(allocator->num_free + 1));
+	allocator->free = realloc(allocator->free,
+	                          sizeof(uint64_t)*(allocator->num_free + 1));
 
 	allocator->num_free++;
 

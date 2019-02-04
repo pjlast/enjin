@@ -48,7 +48,7 @@ SDL_Texture *gCurrentSurface = NULL;
 
 int updatePositionSystem(struct gamestate *gs, struct gindex entity, int posindex) {
 	struct position ***positions = gs->components[posindex];
-	if (!(*positions)[entity.index])
+	if (!(*positions)[entity.index] || (*positions)[entity.index]->gen != entity.gen)
 		return 1;
 	(*positions)[entity.index]->x++;
 }
@@ -56,9 +56,9 @@ int updatePositionSystem(struct gamestate *gs, struct gindex entity, int posinde
 int DrawSystem(struct gamestate *gs, struct gindex entity, int posindex, int drawindex) {
 	struct position ***positions = gs->components[posindex];
 	struct draw ***draws = gs->components[drawindex];
-	if (!(*positions)[entity.index])
+	if (!(*positions)[entity.index] || (*positions)[entity.index]->gen != entity.gen)
 		return 1;
-	if (!(*draws)[entity.index])
+	if (!(*draws)[entity.index] || (*positions)[entity.index]->gen != entity.gen)
 		return 1;
 	SDL_RenderClear(gRenderer);
 	SDL_Rect DestR;
@@ -94,8 +94,8 @@ int main(int argc, char *args[])
 					if (e.type == SDL_QUIT)
 						quit = true;
 				}
-				for (int i = 0; i < gs.entity_allocator.num_entries; i++) {
-					if (is_live(gs.entity_allocator, gs.entities[i]))
+				for (int i = 0; i < gs.allocator.num_entries; i++) {
+					if (is_live(gs.allocator, gs.entities[i]))
 						updatePositionSystem(&gs, gs.entities[i], POSITION_INDEX);
 						DrawSystem(&gs, gs.entities[i], POSITION_INDEX, DRAW_INDEX);
 				}
