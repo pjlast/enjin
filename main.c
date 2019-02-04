@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include "gindex/gindex.h"
 #include "gamestate/gamestate.h"
+#include "components/collision/collision.h"
+#include "components/physics/physics.h"
 
 const int SCREEN_WIDTH = 640;
 const int SCREEN_HEIGHT = 480;
@@ -53,27 +55,76 @@ int DrawSystem(struct gamestate *gs, struct gindex entity, int posindex, int dra
 		return 1;
 	if (!draws[entity.index] || positions[entity.index]->gen != entity.gen)
 		return 1;
-	SDL_RenderClear(gRenderer);
 	SDL_Rect DestR;
 	DestR.x = positions[entity.index]->x;
 	DestR.y = positions[entity.index]->y;
-	DestR.w = 640;
-	DestR.h = 480;
+	int w, h;
+	SDL_QueryTexture(draws[entity.index]->texture, NULL, NULL, &w, &h);
+	DestR.w = w;
+	DestR.h = h;
 
 	SDL_RenderCopy(gRenderer, draws[entity.index]->texture, NULL,
 	               &DestR);
-	SDL_RenderPresent(gRenderer);
 } 
+
+int physics_system(struct gamestate *gs, struct gindex entity, int phys_index, int pos_index, int col_index)
+{
+	struct physics **physicss = gs->components[phys_index];
+	struct position **positions = gs->components[pos_index];
+	struct collision **collisions = gs->components[col_index];
+	if (!positions[entity.index] || positions[entity.index]->gen != entity.gen)
+		return 1;
+	if (!physicss[entity.index] || physicss[entity.index]->gen != entity.gen)
+		return 1;
+	if (!collisions[entity.index] || collisions[entity.index]-> gen != entity.gen)
+		return 1;
+
+
+	for (int i = 0; i < gs->allocator.num_entries; i++) {
+		if (!collisions[i] || collisions[i]->gen != gs->entities[i].gen)
+			continue;
+		if (entity.index != i) {
+			SDL_Rect nextbox = collisions[entity.index]->box;
+			nextbox.x += physicss[entity.index]->velocity_x;
+			nextbox.y += physicss[entity.index]->velocity_y;
+			if (check_collision(nextbox, collisions[i]->box)) {
+				//physicss[entity.index]->velocity_y = 0;
+				return 1;
+			}
+		}
+	}
+
+	if (entity.index == 1)
+		physicss[entity.index]->velocity_y += 0.0001;
+
+	positions[entity.index]->x += physicss[entity.index]->velocity_x;
+	positions[entity.index]->y += physicss[entity.index]->velocity_y;
+	if (collisions[entity.index] && collisions[entity.index]->gen == entity.gen) {
+		collisions[entity.index]->box.x = positions[entity.index]->x + collisions[entity.index]->offset_x;
+		collisions[entity.index]->box.y = positions[entity.index]->y + collisions[entity.index]->offset_y;
+	}
+}
 
 int main(int argc, char *args[])
 {
 	struct gamestate gs = init_gamestate();
 	const int POSITION_INDEX = register_component(&gs);
 	const int DRAW_INDEX = register_component(&gs);
+	const int COL_INDEX = register_component(&gs);
+	const int PHYS_INDEX = register_component(&gs);
 	if (!init())
 		printf("Failed to initialize!\n");
 	else {
 		struct gindex image = create_entity(&gs);
+		struct gindex red_square = create_entity(&gs);
+		struct gindex blue_square = create_entity(&gs);
+		add_position(&gs, blue_square, 50, 400);
+		add_draw(&gs, blue_square, load_texture("blue_square.png"));
+		add_collision_box(&gs, blue_square, 25, 25, 50, 400, COL_INDEX);
+		add_position(&gs, red_square, 50, 50);
+		add_draw(&gs, red_square, load_texture("red_square.png"));
+		add_collision_box(&gs, red_square, 25, 25, 0, 0, COL_INDEX);
+		add_physics(&gs, red_square, 0, 0, PHYS_INDEX);
 		add_position(&gs, image, 1, 1);
 		add_draw(&gs, image, load_texture("press.bmp"));
 		if (!load_media())
@@ -86,12 +137,23 @@ int main(int argc, char *args[])
 				while (SDL_PollEvent(&e) != 0) {
 					if (e.type == SDL_QUIT)
 						quit = true;
+					else if (e.type == SDL_KEYDOWN) {
+						switch (e.key.keysym.sym) {
+						case SDLK_UP:
+							((struct physics**) gs.components[PHYS_INDEX])[1]->velocity_y = -0.25;
+							break;
+						}
+					}
 				}
+				SDL_RenderClear(gRenderer);
 				for (int i = 0; i < gs.allocator.num_entries; i++) {
-					if (is_live(gs.allocator, gs.entities[i]))
-						updatePositionSystem(&gs, gs.entities[i], POSITION_INDEX);
+					if (is_live(gs.allocator, gs.entities[i])) {
+						//updatePositionSystem(&gs, gs.entities[i], POSITION_INDEX);
 						DrawSystem(&gs, gs.entities[i], POSITION_INDEX, DRAW_INDEX);
+						physics_system(&gs, gs.entities[i], PHYS_INDEX, POSITION_INDEX, COL_INDEX);
+					}
 				}
+				SDL_RenderPresent(gRenderer);
 			}
 		}
 	}
