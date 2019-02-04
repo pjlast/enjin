@@ -39,35 +39,28 @@ SDL_Texture *gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 
 SDL_Texture *gCurrentSurface = NULL;
 
-//void freeEntity(entity *e) {
-//	if (e->components.position)
-//		free(e->components.position);
-//	if (e->components.draw)
-//		free(e->components.draw);
-//}
-
 int updatePositionSystem(struct gamestate *gs, struct gindex entity, int posindex) {
-	struct position ***positions = gs->components[posindex];
-	if (!(*positions)[entity.index] || (*positions)[entity.index]->gen != entity.gen)
+	struct position **positions = gs->components[posindex];
+	if (!positions[entity.index] || positions[entity.index]->gen != entity.gen)
 		return 1;
-	(*positions)[entity.index]->x++;
+	positions[entity.index]->x++;
 }
  
 int DrawSystem(struct gamestate *gs, struct gindex entity, int posindex, int drawindex) {
-	struct position ***positions = gs->components[posindex];
-	struct draw ***draws = gs->components[drawindex];
-	if (!(*positions)[entity.index] || (*positions)[entity.index]->gen != entity.gen)
+	struct position **positions = gs->components[posindex];
+	struct draw **draws = gs->components[drawindex];
+	if (!positions[entity.index] || positions[entity.index]->gen != entity.gen)
 		return 1;
-	if (!(*draws)[entity.index] || (*positions)[entity.index]->gen != entity.gen)
+	if (!draws[entity.index] || positions[entity.index]->gen != entity.gen)
 		return 1;
 	SDL_RenderClear(gRenderer);
 	SDL_Rect DestR;
-	DestR.x = (*positions)[entity.index]->x;
-	DestR.y = (*positions)[entity.index]->y;
+	DestR.x = positions[entity.index]->x;
+	DestR.y = positions[entity.index]->y;
 	DestR.w = 640;
 	DestR.h = 480;
 
-	SDL_RenderCopy(gRenderer, (*draws)[entity.index]->texture, NULL,
+	SDL_RenderCopy(gRenderer, draws[entity.index]->texture, NULL,
 	               &DestR);
 	SDL_RenderPresent(gRenderer);
 } 

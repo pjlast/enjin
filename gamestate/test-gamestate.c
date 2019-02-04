@@ -1,6 +1,7 @@
 #include "../test/unity.h"
 #include "gamestate.h"
 #include "../gindex/gindex.h"
+#include <stdio.h>
 
 void test_init_gamestate_returns_initialized_gamestate(void)
 {
@@ -44,9 +45,12 @@ void test_register_component_allocates_memory(void)
 void test_create_and_free_multiple_entities(void)
 {
 	struct gamestate gs = init_gamestate();
+	register_component(&gs);
 	for (int i = 0; i < 20; i++) {
 		struct gindex entity = create_entity(&gs);
+		add_position(&gs, entity, 0, 1);
 		TEST_ASSERT_EQUAL(gs.entities[i].index, entity.index);
+		TEST_ASSERT_EQUAL(1, ((struct position**) gs.components[0])[i]->y);
 	}
 }
 

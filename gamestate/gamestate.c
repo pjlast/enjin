@@ -48,18 +48,14 @@ int register_component(struct gamestate *gs)
 
 void add_position(struct gamestate *gs, struct gindex e, float x, float y)
 {
-	struct position ***positions = malloc(sizeof(struct position**));
-	*positions = malloc(sizeof(struct position*));
-	*positions[e.index] = malloc(sizeof(struct position));
-	**positions[e.index] = (struct position) {e.gen, x, y};
-	gs->components[0] = positions;
+	gs->components[0] = realloc(gs->components[0], sizeof(struct position**)*(gs->allocator.num_entries));
+	((struct position**) gs->components[0])[e.index] = malloc(sizeof(struct position));
+	*(((struct position**) gs->components[0])[e.index]) = (struct position) {e.gen, x, y};
 }
 
 void add_draw(struct gamestate *gs, struct gindex e, SDL_Texture *texture)
 {
-	struct draw ***draws = malloc(sizeof(struct draw**));
-	*draws = malloc(sizeof(struct draw*));
-	*draws[e.index] = malloc(sizeof(struct draw));
-	**draws[e.index] = (struct draw) {e.gen, texture};
-	gs->components[1] = draws;
+	gs->components[1] = realloc(gs->components[1], sizeof(struct draw**)*(gs->allocator.num_entries));
+	((struct draw**) gs->components[1])[e.index] = malloc(sizeof(struct draw));
+	*(((struct draw**) gs->components[1])[e.index]) = (struct draw) {e.gen, texture};
 }
