@@ -41,23 +41,27 @@ SDL_Texture *gCurrentSurface = NULL;
 //		free(e->components.draw);
 //}
 
-int updatePositionSystem(struct gamestate *gs, struct gindex entity) {
-	if (!gs->positions)
-		return 1;
-	gs->positions[entity.index]->x++;
-}
+//int updatePositionSystem(struct gamestate *gs, struct gindex entity) {
+//	if (!gs->positions)
+//		return 1;
+//	gs->positions[entity.index]->x++;
+//}
  
 int DrawSystem(struct gamestate *gs, struct gindex entity) {
-	if (!gs->positions[entity.index] || !gs->draws[entity.index])
+	struct position ***positions = gs->components[0];
+	struct draw ***draws = gs->components[1];
+	if (!(*positions)[entity.index])
+		return 1;
+	if (!(*draws)[entity.index])
 		return 1;
 	SDL_RenderClear(gRenderer);
 	SDL_Rect DestR;
-	DestR.x = gs->positions[entity.index]->x;
-	DestR.y = gs->positions[entity.index]->y;
+	DestR.x = (*positions)[entity.index]->x;
+	DestR.y = (*positions)[entity.index]->y;
 	DestR.w = 640;
 	DestR.h = 480;
 
-	SDL_RenderCopy(gRenderer, gs->draws[entity.index]->texture, NULL,
+	SDL_RenderCopy(gRenderer, (*draws)[entity.index]->texture, NULL,
 	               &DestR);
 	SDL_RenderPresent(gRenderer);
 } 
@@ -69,7 +73,7 @@ int main(int argc, char *args[])
 		printf("Failed to initialize!\n");
 	else {
 		struct gindex image = create_entity(&gs);
-		add_position(&gs, image, 0, 0);
+		add_position(&gs, image, 1, 1);
 		add_draw(&gs, image, load_texture("press.bmp"));
 		if (!load_media())
 			printf("Failed to load media!\n");

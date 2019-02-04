@@ -16,8 +16,8 @@ struct draw {
 struct gamestate {
 	struct gindex_allocator entity_allocator;
 	struct gindex *entities;
-	struct position **positions;
-	struct draw **draws;
+	void **components;
+	int num_components;
 };
 
 struct gamestate init_gamestate(void);
