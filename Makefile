@@ -27,4 +27,4 @@ test/gindex.out: test/test-gindex.c
 	@$(CC) $(CFLAGS) unity/src/unity.c test/test-gindex.c src/gindex/gindex.c -o test/gindex.out
 
 build:
-	@$(CC) $(CFLAGS) $(LFLAGS) -o src/program src/main.c src/gindex/gindex.c src/gamestate/gamestate.c src/components/physics/physics.c src/components/collision/collision.c
+	@$(CC) $(CFLAGS) $(LFLAGS) -o src/program src/main2.c src/enjin/enjin.c src/gindex/gindex.c src/gamestate/gamestate.c src/components/physics/physics.c src/components/collision/collision.c
