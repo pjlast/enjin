@@ -19,6 +19,12 @@ Building and running the example program:
 > ./program
 
 Running the tests:
+
+Make sure the unity submodule cloned correctly:
+> git submodule init
+
+> git submodule update
+
 > make test
 
 ## What is an ECS game engine?
