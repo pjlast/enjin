@@ -108,10 +108,10 @@ int physics_system(struct gamestate *gs, struct gindex entity, unsigned int delt
 int main(int argc, char *args[])
 {
 	struct gamestate gs = init_gamestate();
-	const int POSITION_INDEX = register_component(&gs);
-	const int DRAW_INDEX = register_component(&gs);
-	const int COL_INDEX = register_component(&gs);
-	const int PHYS_INDEX = register_component(&gs);
+	const int POSITION_INDEX = register_component(&gs, &clear_position);
+	const int DRAW_INDEX = register_component(&gs, &clear_draw);
+	const int COL_INDEX = register_component(&gs, &clear_collision);
+	const int PHYS_INDEX = register_component(&gs, &clear_physics);
 	unsigned int start_time = 0;
 	if (!init())
 		printf("Failed to initialize!\n");

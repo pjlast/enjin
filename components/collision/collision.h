@@ -16,5 +16,6 @@ struct collision {
 void add_collision_box(struct gamestate *gs, struct gindex e, float w,
                        float h, float x, float y, int index);
 bool check_collision(SDL_Rect a, SDL_Rect b);
+void clear_collision(struct gamestate *gs, struct gindex e, int index);
 
 #endif

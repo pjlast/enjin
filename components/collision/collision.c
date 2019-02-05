@@ -47,3 +47,8 @@ bool check_collision(SDL_Rect a, SDL_Rect b)
 
 	return true;
 }
+
+void clear_collision(struct gamestate *gs, struct gindex e, int index)
+{
+	((struct collision**) gs->components[index])[e.index] = NULL;
+}

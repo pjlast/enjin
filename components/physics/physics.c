@@ -9,3 +9,8 @@ void add_physics(struct gamestate *gs, struct gindex e, float velocity_x,
         ((struct physics**) gs->components[index])[e.index] = malloc(sizeof(struct physics));
         *(((struct physics**) gs->components[index])[e.index]) = (struct physics) {e.gen, velocity_x, velocity_y};
 }
+
+void clear_physics(struct gamestate *gs, struct gindex e, int index)
+{
+	((struct physics**) gs->components[index])[e.index] = NULL;
+}
