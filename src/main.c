@@ -3,6 +3,7 @@
 #include <SDL2/SDL_image.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdint.h>
 #include "gindex/gindex.h"
 #include "gamestate/gamestate.h"
 #include "components/collision/collision.h"
@@ -44,6 +45,7 @@ int updatePositionSystem(struct gamestate *gs, struct gindex entity, int posinde
 	if (!positions[entity.index])
 		return 1;
 	positions[entity.index]->x++;
+	return 0;
 }
  
 int DrawSystem(struct gamestate *gs, struct gindex entity, int posindex, int drawindex) {
@@ -63,9 +65,10 @@ int DrawSystem(struct gamestate *gs, struct gindex entity, int posindex, int dra
 
 	SDL_RenderCopy(gRenderer, draws[entity.index]->texture, NULL,
 	               &DestR);
+	return 0;
 } 
 
-int physics_system(struct gamestate *gs, struct gindex entity, unsigned int delta, int phys_index, int pos_index, int col_index)
+int physics_system(struct gamestate *gs, struct gindex entity, int phys_index, int pos_index, int col_index)
 {
 	struct physics **physicss = (struct physics**) gs->components[phys_index];
 	struct position **positions = (struct position**) gs->components[pos_index];
@@ -78,7 +81,7 @@ int physics_system(struct gamestate *gs, struct gindex entity, unsigned int delt
 		return 1;
 
 
-	for (int i = 0; i < gs->allocator.num_entries; i++) {
+	for (uint64_t i = 0; i < gs->allocator.num_entries; i++) {
 		if (!collisions[i])
 			continue;
 		if (entity.index != i) {
@@ -101,16 +104,16 @@ int physics_system(struct gamestate *gs, struct gindex entity, unsigned int delt
 		collisions[entity.index]->box.x = positions[entity.index]->x + collisions[entity.index]->offset_x;
 		collisions[entity.index]->box.y = positions[entity.index]->y + collisions[entity.index]->offset_y;
 	}
+	return 0;
 }
 
-int main(int argc, char *args[])
+int main()
 {
 	struct gamestate gs = init_gamestate();
 	const int POSITION_INDEX = register_component(&gs);
 	const int DRAW_INDEX = register_component(&gs);
 	const int COL_INDEX = register_component(&gs);
 	const int PHYS_INDEX = register_component(&gs);
-	unsigned int start_time = 0;
 	if (!init())
 		printf("Failed to initialize!\n");
 	else {
@@ -165,11 +168,11 @@ int main(int argc, char *args[])
 					}
 				}
 				SDL_RenderClear(gRenderer);
-				for (int i = 0; i < gs.allocator.num_entries; i++) {
+				for (uint64_t i = 0; i < gs.allocator.num_entries; i++) {
 					if (is_live(gs.allocator, gs.entities[i])) {
 						//updatePositionSystem(&gs, gs.entities[i], POSITION_INDEX);
 						DrawSystem(&gs, gs.entities[i], POSITION_INDEX, DRAW_INDEX);
-						physics_system(&gs, gs.entities[i], 0,PHYS_INDEX, POSITION_INDEX, COL_INDEX);
+						physics_system(&gs, gs.entities[i],PHYS_INDEX, POSITION_INDEX, COL_INDEX);
 					}
 				}
 				SDL_RenderPresent(gRenderer);
@@ -179,7 +182,7 @@ int main(int argc, char *args[])
 
 	SDL_RenderClear(gRenderer);
 	struct draw **draws = (struct draw**) (&gs)->components[DRAW_INDEX];
-	for (int i = 0; i < gs.allocator.num_entries; i++) {
+	for (uint64_t i = 0; i < gs.allocator.num_entries; i++) {
 
 		if (draws[i]) {
 			if (draws[i]->texture) {
@@ -296,6 +299,7 @@ void cleanup()
 
 	IMG_Quit();
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
+	SDL_QuitSubSystem(SDL_INIT_EVENTS);
 	SDL_Quit();
 }
 
