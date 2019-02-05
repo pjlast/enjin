@@ -12,7 +12,7 @@ e.g. Fedora:
 
 ## Running the stuffs
 Building and running the example program:
-> make executable
+> make build
 
 > cd src
 

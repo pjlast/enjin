@@ -8,21 +8,23 @@ CFLAGS += -Werror
 LFLAGS = -lSDL2
 LFLAGS += -lSDL2_image
 
-test: tests/gamestate.out tests/gindex.out
-	@./tests/gamestate.out
-	@./tests/gindex.out
+.PHONY: build test clean
+
+test: test/gamestate.out test/gindex.out
+	@./test/gamestate.out
+	@./test/gindex.out
 
 clean:
-	rm -rf tests/*.out
+	rm -rf test/*.out
 	rm -rf src/program
 
-tests/gamestate.out: tests/test-gamestate.c
+test/gamestate.out: test/test-gamestate.c
 	@echo Compiling $@
-	@$(CC) $(CFLAGS) unity/src/unity.c tests/test-gamestate.c src/gamestate/gamestate.c src/gindex/gindex.c -o tests/gamestate.out
+	@$(CC) $(CFLAGS) unity/src/unity.c test/test-gamestate.c src/gamestate/gamestate.c src/gindex/gindex.c -o test/gamestate.out
 
-tests/gindex.out: tests/test-gindex.c
+test/gindex.out: test/test-gindex.c
 	@echo Compiling $@
-	@$(CC) $(CFLAGS) unity/src/unity.c tests/test-gindex.c src/gindex/gindex.c -o tests/gindex.out
+	@$(CC) $(CFLAGS) unity/src/unity.c test/test-gindex.c src/gindex/gindex.c -o test/gindex.out
 
-executable:
+build:
 	@$(CC) $(CFLAGS) $(LFLAGS) -o src/program src/main.c src/gindex/gindex.c src/gamestate/gamestate.c src/components/physics/physics.c src/components/collision/collision.c
