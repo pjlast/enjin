@@ -43,7 +43,7 @@ SDL_Texture *gCurrentSurface = NULL;
 
 int updatePositionSystem(struct gamestate *gs, struct gindex entity, int posindex) {
 	struct position **positions = (struct position**) gs->components[posindex];
-	if (!positions[entity.index] || positions[entity.index]->gen != entity.gen)
+	if (!positions[entity.index])
 		return 1;
 	positions[entity.index]->x++;
 }
@@ -51,9 +51,9 @@ int updatePositionSystem(struct gamestate *gs, struct gindex entity, int posinde
 int DrawSystem(struct gamestate *gs, struct gindex entity, int posindex, int drawindex) {
 	struct position **positions = (struct position**) gs->components[posindex];
 	struct draw **draws = (struct draw**) gs->components[drawindex];
-	if (!positions[entity.index] || positions[entity.index]->gen != entity.gen)
+	if (!positions[entity.index])
 		return 1;
-	if (!draws[entity.index] || positions[entity.index]->gen != entity.gen)
+	if (!draws[entity.index])
 		return 1;
 	SDL_Rect DestR;
 	DestR.x = positions[entity.index]->x;
@@ -72,16 +72,16 @@ int physics_system(struct gamestate *gs, struct gindex entity, unsigned int delt
 	struct physics **physicss = (struct physics**) gs->components[phys_index];
 	struct position **positions = (struct position**) gs->components[pos_index];
 	struct collision **collisions = (struct collision**) gs->components[col_index];
-	if (!positions[entity.index] || positions[entity.index]->gen != entity.gen)
+	if (!positions[entity.index])
 		return 1;
-	if (!physicss[entity.index] || physicss[entity.index]->gen != entity.gen)
+	if (!physicss[entity.index])
 		return 1;
-	if (!collisions[entity.index] || collisions[entity.index]-> gen != entity.gen)
+	if (!collisions[entity.index])
 		return 1;
 
 
 	for (int i = 0; i < gs->allocator.num_entries; i++) {
-		if (!collisions[i] || collisions[i]->gen != gs->entities[i].gen)
+		if (!collisions[i])
 			continue;
 		if (entity.index != i) {
 			SDL_Rect nextbox = collisions[entity.index]->box;
@@ -99,7 +99,7 @@ int physics_system(struct gamestate *gs, struct gindex entity, unsigned int delt
 
 	positions[entity.index]->x += physicss[entity.index]->velocity_x*1/60.0;
 	positions[entity.index]->y += physicss[entity.index]->velocity_y*1/60.0;
-	if (collisions[entity.index] && collisions[entity.index]->gen == entity.gen) {
+	if (collisions[entity.index]) {
 		collisions[entity.index]->box.x = positions[entity.index]->x + collisions[entity.index]->offset_x;
 		collisions[entity.index]->box.y = positions[entity.index]->y + collisions[entity.index]->offset_y;
 	}
@@ -181,7 +181,19 @@ int main(int argc, char *args[])
 		}
 	}
 
-	//freeEntity(&image);
+	for (int i = 0; i < gs.allocator.num_entries; i++) {
+		for (int j = 0; j < gs.num_components; j++) {
+			free(gs.components[j][i]);
+		}
+		destroy_entity(&gs, gs.entities[i]);
+	}
+	for (int i = 0; i < gs.num_components; i++) {
+		free(gs.components[i]);
+	}
+	free(gs.entities);
+	free(gs.components);
+	free(gs.allocator.entries);
+	free(gs.allocator.free);
 	cleanup();
 	return 0;
 }

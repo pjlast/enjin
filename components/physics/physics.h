@@ -5,7 +5,6 @@
 #include "../../gindex/gindex.h"
 
 struct physics {
-	int gen;
 	float velocity_x;
 	float velocity_y;
 };

@@ -13,7 +13,7 @@ void add_collision_box(struct gamestate *gs, struct gindex e, float w,
 	rect.h = h;
 	rect.x = x;
 	rect.y = y;
-	*(((struct collision**) gs->components[index])[e.index]) = (struct collision) {e.gen, rect, 0, 0};
+	*(((struct collision**) gs->components[index])[e.index]) = (struct collision) {rect, 0, 0};
 }
 
 bool check_collision(SDL_Rect a, SDL_Rect b)

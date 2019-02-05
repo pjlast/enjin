@@ -7,7 +7,6 @@
 #include "../../gindex/gindex.h"
 
 struct collision {
-	int gen;
 	SDL_Rect box;
 	float offset_x;
 	float offset_y;

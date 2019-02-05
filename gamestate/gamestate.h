@@ -6,13 +6,11 @@
 
 
 struct position {
-	int gen;
 	float x;
 	float y;
 };
 
 struct draw {
-	int gen;
 	SDL_Texture *texture;
 };
 
