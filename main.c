@@ -19,8 +19,6 @@ SDL_Window *gWindow = NULL;
 
 SDL_Renderer *gRenderer = NULL;
 
-SDL_Texture *gTexture = NULL;
-
 enum key_press_surfaces {
 	KEY_PRESS_SURFACE_DEFAULT,
 	KEY_PRESS_SURFACE_UP,
@@ -127,22 +125,20 @@ int main(int argc, char *args[])
 		add_collision_box(&gs, red_square, 25, 25, 0, 0, COL_INDEX);
 		add_physics(&gs, red_square, 0, 0, PHYS_INDEX);
 		add_position(&gs, image, 1, 1);
-		add_draw(&gs, image, load_texture("press.bmp"));
+		SDL_Texture *press = load_texture("press.bmp");
+		add_draw(&gs, image, press);
 		struct gindex blue_square2 = create_entity(&gs);
 		add_position(&gs, blue_square2, 200, 400);
 		add_draw(&gs, blue_square2, load_texture("blue_square.png"));
 		add_collision_box(&gs, blue_square2, 25, 25, 200, 400, COL_INDEX);
 		((struct physics**) gs.components[PHYS_INDEX])[3] = NULL;
-		if (!load_media())
+		if (!true)
 			printf("Failed to load media!\n");
 		else {
 			bool quit = false;
 			SDL_Event e;
 
 			while (!quit) {
-				//unsigned int delta_time = SDL_GetTicks() - start_time;
-				//start_time = SDL_GetTicks();
-				//printf("%d\n", delta_time);
 				while (SDL_PollEvent(&e) != 0) {
 					if (e.type == SDL_QUIT)
 						quit = true;
@@ -181,7 +177,16 @@ int main(int argc, char *args[])
 		}
 	}
 
+	SDL_RenderClear(gRenderer);
+	struct draw **draws = (struct draw**) (&gs)->components[DRAW_INDEX];
 	for (int i = 0; i < gs.allocator.num_entries; i++) {
+
+		if (draws[i]) {
+			if (draws[i]->texture) {
+				SDL_DestroyTexture(draws[i]->texture);
+				draws[i]->texture = NULL;
+			}
+		}
 		for (int j = 0; j < gs.num_components; j++) {
 			free(gs.components[j][i]);
 		}
@@ -194,6 +199,7 @@ int main(int argc, char *args[])
 	free(gs.components);
 	free(gs.allocator.entries);
 	free(gs.allocator.free);
+	//SDL_ClearError();
 	cleanup();
 	return 0;
 }
@@ -279,8 +285,8 @@ bool load_media()
 void cleanup()
 {
 	for (int i = 0; i < KEY_PRESS_SURFACE_TOTAL; i++) {
-		SDL_DestroyTexture(gKeyPressSurfaces[i]);
-		gKeyPressSurfaces[i] = NULL;
+		//SDL_DestroyTexture(gKeyPressSurfaces[i]);
+		//gKeyPressSurfaces[i] = NULL;
 	}
 
 	SDL_DestroyRenderer(gRenderer);
@@ -289,6 +295,7 @@ void cleanup()
 	gRenderer = NULL;
 
 	IMG_Quit();
+	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	SDL_Quit();
 }
 
