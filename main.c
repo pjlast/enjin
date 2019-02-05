@@ -42,15 +42,15 @@ SDL_Texture *gKeyPressSurfaces[KEY_PRESS_SURFACE_TOTAL];
 SDL_Texture *gCurrentSurface = NULL;
 
 int updatePositionSystem(struct gamestate *gs, struct gindex entity, int posindex) {
-	struct position **positions = gs->components[posindex];
+	struct position **positions = (struct position**) gs->components[posindex];
 	if (!positions[entity.index] || positions[entity.index]->gen != entity.gen)
 		return 1;
 	positions[entity.index]->x++;
 }
  
 int DrawSystem(struct gamestate *gs, struct gindex entity, int posindex, int drawindex) {
-	struct position **positions = gs->components[posindex];
-	struct draw **draws = gs->components[drawindex];
+	struct position **positions = (struct position**) gs->components[posindex];
+	struct draw **draws = (struct draw**) gs->components[drawindex];
 	if (!positions[entity.index] || positions[entity.index]->gen != entity.gen)
 		return 1;
 	if (!draws[entity.index] || positions[entity.index]->gen != entity.gen)
@@ -69,9 +69,9 @@ int DrawSystem(struct gamestate *gs, struct gindex entity, int posindex, int dra
 
 int physics_system(struct gamestate *gs, struct gindex entity, unsigned int delta, int phys_index, int pos_index, int col_index)
 {
-	struct physics **physicss = gs->components[phys_index];
-	struct position **positions = gs->components[pos_index];
-	struct collision **collisions = gs->components[col_index];
+	struct physics **physicss = (struct physics**) gs->components[phys_index];
+	struct position **positions = (struct position**) gs->components[pos_index];
+	struct collision **collisions = (struct collision**) gs->components[col_index];
 	if (!positions[entity.index] || positions[entity.index]->gen != entity.gen)
 		return 1;
 	if (!physicss[entity.index] || physicss[entity.index]->gen != entity.gen)
@@ -108,10 +108,10 @@ int physics_system(struct gamestate *gs, struct gindex entity, unsigned int delt
 int main(int argc, char *args[])
 {
 	struct gamestate gs = init_gamestate();
-	const int POSITION_INDEX = register_component(&gs, &clear_position);
-	const int DRAW_INDEX = register_component(&gs, &clear_draw);
-	const int COL_INDEX = register_component(&gs, &clear_collision);
-	const int PHYS_INDEX = register_component(&gs, &clear_physics);
+	const int POSITION_INDEX = register_component(&gs);
+	const int DRAW_INDEX = register_component(&gs);
+	const int COL_INDEX = register_component(&gs);
+	const int PHYS_INDEX = register_component(&gs);
 	unsigned int start_time = 0;
 	if (!init())
 		printf("Failed to initialize!\n");

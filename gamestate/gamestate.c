@@ -14,7 +14,6 @@ struct gamestate init_gamestate(void)
 	gs.num_components = 0;
 	gs.entities = NULL;
 	gs.components = NULL;
-	gs.clear_functions = NULL;
 	return gs;
 }
 
@@ -31,7 +30,7 @@ struct gindex create_entity(struct gamestate *gs)
 	gs->entities[e.index] = e;
 
 	for (int i = 0; i < gs->num_components; i++) {
-		(*(gs->clear_functions[i]))(gs, e, i);
+		gs->components[i][e.index] = NULL;
 	}
 	return e;
 }
@@ -41,16 +40,12 @@ void destroy_entity(struct gamestate *gs, struct gindex e)
 	gfree(&gs->allocator, e);
 }
 
-int register_component(struct gamestate *gs, clearfunc clear)
+int register_component(struct gamestate *gs)
 {
 	gs->num_components++;
 	gs->components = realloc(gs->components,
 	                         sizeof(void *)*gs->num_components);
 	gs->components[gs->num_components - 1] = malloc(sizeof(void*));
-
-	gs->clear_functions = realloc(gs->clear_functions,
-	                              sizeof(clearfunc)*gs->num_components);
-	gs->clear_functions[gs->num_components - 1] = clear;
 
 	return (gs->num_components - 1);
 }
@@ -67,14 +62,4 @@ void add_draw(struct gamestate *gs, struct gindex e, SDL_Texture *texture)
 	gs->components[1] = realloc(gs->components[1], sizeof(struct draw**)*(gs->allocator.num_entries));
 	((struct draw**) gs->components[1])[e.index] = malloc(sizeof(struct draw));
 	*(((struct draw**) gs->components[1])[e.index]) = (struct draw) {e.gen, texture};
-}
-
-void clear_draw(struct gamestate *gs, struct gindex e, int index)
-{
-	((struct draw**) gs->components[index])[e.index] = NULL;
-}
-
-void clear_position(struct gamestate *gs, struct gindex e, int index)
-{
-	((struct position**) gs->components[index])[e.index] = NULL;
 }

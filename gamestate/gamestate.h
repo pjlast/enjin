@@ -18,24 +18,18 @@ struct draw {
 
 struct gamestate;
 
-typedef void (*clearfunc)(struct gamestate*, struct gindex, int);
-
 struct gamestate {
 	struct gindex_allocator allocator;
 	struct gindex *entities;
-	void **components;
-	clearfunc *clear_functions;
+	void ***components;
 	int num_components;
 };
 
 struct gamestate init_gamestate(void);
 struct gindex create_entity(struct gamestate *gs);
 void destroy_entity(struct gamestate *gs, struct gindex e);
-int register_component(struct gamestate *gs,
-		clearfunc);
+int register_component(struct gamestate *gs);
 void add_position(struct gamestate *gs, struct gindex e, float x, float y);
 void add_draw(struct gamestate *gs, struct gindex e, SDL_Texture *texture);
-void clear_draw(struct gamestate *gs, struct gindex e, int index);
-void clear_position(struct gamestate *gs, struct gindex e, int index);
 
 #endif
