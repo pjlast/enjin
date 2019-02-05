@@ -67,7 +67,7 @@ int DrawSystem(struct gamestate *gs, struct gindex entity, int posindex, int dra
 	               &DestR);
 } 
 
-int physics_system(struct gamestate *gs, struct gindex entity, int phys_index, int pos_index, int col_index)
+int physics_system(struct gamestate *gs, struct gindex entity, unsigned int delta, int phys_index, int pos_index, int col_index)
 {
 	struct physics **physicss = gs->components[phys_index];
 	struct position **positions = gs->components[pos_index];
@@ -85,8 +85,8 @@ int physics_system(struct gamestate *gs, struct gindex entity, int phys_index, i
 			continue;
 		if (entity.index != i) {
 			SDL_Rect nextbox = collisions[entity.index]->box;
-			nextbox.x += physicss[entity.index]->velocity_x;
-			nextbox.y += physicss[entity.index]->velocity_y;
+			nextbox.x += physicss[entity.index]->velocity_x*1/60.0;
+			nextbox.y += physicss[entity.index]->velocity_y*1/60.0;
 			if (check_collision(nextbox, collisions[i]->box)) {
 				//physicss[entity.index]->velocity_y = 0;
 				return 1;
@@ -95,10 +95,10 @@ int physics_system(struct gamestate *gs, struct gindex entity, int phys_index, i
 	}
 
 	if (entity.index == 1)
-		physicss[entity.index]->velocity_y += 0.0001;
+		physicss[entity.index]->velocity_y += 980*1/60.0;
 
-	positions[entity.index]->x += physicss[entity.index]->velocity_x;
-	positions[entity.index]->y += physicss[entity.index]->velocity_y;
+	positions[entity.index]->x += physicss[entity.index]->velocity_x*1/60.0;
+	positions[entity.index]->y += physicss[entity.index]->velocity_y*1/60.0;
 	if (collisions[entity.index] && collisions[entity.index]->gen == entity.gen) {
 		collisions[entity.index]->box.x = positions[entity.index]->x + collisions[entity.index]->offset_x;
 		collisions[entity.index]->box.y = positions[entity.index]->y + collisions[entity.index]->offset_y;
@@ -112,6 +112,7 @@ int main(int argc, char *args[])
 	const int DRAW_INDEX = register_component(&gs);
 	const int COL_INDEX = register_component(&gs);
 	const int PHYS_INDEX = register_component(&gs);
+	unsigned int start_time = 0;
 	if (!init())
 		printf("Failed to initialize!\n");
 	else {
@@ -127,6 +128,11 @@ int main(int argc, char *args[])
 		add_physics(&gs, red_square, 0, 0, PHYS_INDEX);
 		add_position(&gs, image, 1, 1);
 		add_draw(&gs, image, load_texture("press.bmp"));
+		struct gindex blue_square2 = create_entity(&gs);
+		add_position(&gs, blue_square2, 200, 400);
+		add_draw(&gs, blue_square2, load_texture("blue_square.png"));
+		add_collision_box(&gs, blue_square2, 25, 25, 200, 400, COL_INDEX);
+		((struct physics**) gs.components[PHYS_INDEX])[3] = NULL;
 		if (!load_media())
 			printf("Failed to load media!\n");
 		else {
@@ -134,13 +140,30 @@ int main(int argc, char *args[])
 			SDL_Event e;
 
 			while (!quit) {
+				//unsigned int delta_time = SDL_GetTicks() - start_time;
+				//start_time = SDL_GetTicks();
+				//printf("%d\n", delta_time);
 				while (SDL_PollEvent(&e) != 0) {
 					if (e.type == SDL_QUIT)
 						quit = true;
 					else if (e.type == SDL_KEYDOWN) {
 						switch (e.key.keysym.sym) {
 						case SDLK_UP:
-							((struct physics**) gs.components[PHYS_INDEX])[1]->velocity_y = -0.25;
+							((struct physics**) gs.components[PHYS_INDEX])[1]->velocity_y = -700;
+							break;
+						case SDLK_RIGHT:
+							((struct physics**) gs.components[PHYS_INDEX])[1]->velocity_x = 300;
+							break;
+						case SDLK_LEFT:
+							((struct physics**) gs.components[PHYS_INDEX])[1]->velocity_x = -300;
+							break;
+						}
+					}
+					else if (e.type == SDL_KEYUP) {
+						switch (e.key.keysym.sym) {
+						case SDLK_RIGHT:
+						case SDLK_LEFT:
+							((struct physics**) gs.components[PHYS_INDEX])[1]->velocity_x = 0;
 							break;
 						}
 					}
@@ -150,7 +173,7 @@ int main(int argc, char *args[])
 					if (is_live(gs.allocator, gs.entities[i])) {
 						//updatePositionSystem(&gs, gs.entities[i], POSITION_INDEX);
 						DrawSystem(&gs, gs.entities[i], POSITION_INDEX, DRAW_INDEX);
-						physics_system(&gs, gs.entities[i], PHYS_INDEX, POSITION_INDEX, COL_INDEX);
+						physics_system(&gs, gs.entities[i], 0,PHYS_INDEX, POSITION_INDEX, COL_INDEX);
 					}
 				}
 				SDL_RenderPresent(gRenderer);
@@ -184,7 +207,7 @@ bool init()
 			success = false;
 		} else {
 			gRenderer = SDL_CreateRenderer(gWindow, -1,
-					SDL_RENDERER_ACCELERATED);
+					SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 			if (gRenderer == NULL) {
 				printf("Renderer could not be created! SDL Error: %s\n",
 				       SDL_GetError());
