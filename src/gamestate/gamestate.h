@@ -17,10 +17,10 @@ struct draw {
 struct gamestate;
 
 struct gamestate {
-	struct gindex_allocator allocator;
-	struct gindex *entities;
-	void ***components;
-	int num_components;
+	struct gindex_allocator alloc;
+	struct gindex *ents;
+	void ***comps;
+	int numcomps;
 };
 
 struct gamestate init_gamestate(void);

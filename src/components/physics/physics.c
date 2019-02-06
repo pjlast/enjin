@@ -4,8 +4,8 @@
 void add_physics(struct gamestate *gs, struct gindex e, float velocity_x,
                  float velocity_y, int index)
 {
-        gs->components[index] = realloc(gs->components[index],
-                                        sizeof(struct physics**)*(gs->allocator.num_entries));
-        ((struct physics**) gs->components[index])[e.index] = malloc(sizeof(struct physics));
-        *(((struct physics**) gs->components[index])[e.index]) = (struct physics) {velocity_x, velocity_y};
+        gs->comps[index] = realloc(gs->comps[index],
+                                        sizeof(struct physics**)*(gs->alloc.numents));
+        ((struct physics**) gs->comps[index])[e.index] = malloc(sizeof(struct physics));
+        *(((struct physics**) gs->comps[index])[e.index]) = (struct physics) {velocity_x, velocity_y};
 }

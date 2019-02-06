@@ -5,15 +5,15 @@
 void add_collision_box(struct gamestate *gs, struct gindex e, float w,
                        float h, float x, float y, int index)
 {
-	gs->components[index] = realloc(gs->components[index],
-	                                sizeof(struct collision**)*(gs->allocator.num_entries));
-	((struct collision**) gs->components[index])[e.index] = malloc(sizeof(struct collision));
+	gs->comps[index] = realloc(gs->comps[index],
+	                                sizeof(struct collision**)*(gs->alloc.numents));
+	((struct collision**) gs->comps[index])[e.index] = malloc(sizeof(struct collision));
 	SDL_Rect rect;
 	rect.w = w;
 	rect.h = h;
 	rect.x = x;
 	rect.y = y;
-	*(((struct collision**) gs->components[index])[e.index]) = (struct collision) {rect, 0, 0};
+	*(((struct collision**) gs->comps[index])[e.index]) = (struct collision) {rect, 0, 0};
 }
 
 bool check_collision(SDL_Rect a, SDL_Rect b)

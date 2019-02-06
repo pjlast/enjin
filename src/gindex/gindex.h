@@ -10,21 +10,22 @@ struct gindex {
 };
 
 struct gindex_allocator {
-	struct gindex_allocator_entry *entries;
-	uint64_t num_entries;
+	struct gindex_allocator_entry *ents;
+	uint64_t numents;
 	uint64_t *free;
-	uint64_t num_free;
+	uint64_t numfree;
 };
 
 struct gindex_allocator_entry {
-	bool is_live;
+	bool islive;
 	uint64_t gen;
 };
 
-struct gindex galloc(struct gindex_allocator *allocator);
-bool gfree(struct gindex_allocator *allocator,
+struct gindex_allocator init_gindex_allocator(void);
+struct gindex galloc(struct gindex_allocator *alloc);
+bool gfree(struct gindex_allocator *alloc,
            struct gindex gi);
-bool is_live(struct gindex_allocator allocator,
+bool islive(struct gindex_allocator alloc,
              struct gindex gi);
 
 #endif

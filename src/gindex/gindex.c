@@ -3,63 +3,62 @@
 #include <stdlib.h>
 #include <stdint.h>
 
-struct gindex galloc(struct gindex_allocator *allocator)
+struct gindex_allocator init_gindex_allocator(void)
 {
-	if (allocator->num_free > 0) {
-		uint64_t index = allocator->free[--allocator->num_free];
+	struct gindex_allocator alloc = {NULL, 0, NULL, 0};
+	
+	return alloc;
+}
 
-		allocator->entries[index].gen++;
-		allocator->entries[index].is_live = true;
+struct gindex galloc(struct gindex_allocator *alloc)
+{
+	if (alloc->numfree > 0) {
+		uint64_t index = alloc->free[--alloc->numfree];
 
-		struct gindex gi;
-		gi.index = index;
-		gi.gen = allocator->entries[index].gen;
+		alloc->ents[index].gen++;
+		alloc->ents[index].islive = true;
 
-		allocator->free = realloc(allocator->free,
-				sizeof(uint64_t)*(allocator->num_free));
+		struct gindex gi = {index, alloc->ents[index].gen};
+
+		alloc->free = realloc(alloc->free,
+		                      sizeof(uint64_t)*(alloc->numfree));
 
 		return gi;
 	}
 
-	allocator->entries = realloc(allocator->entries,
-			sizeof(struct gindex_allocator_entry)*(
-					allocator->num_entries + 1));
+	alloc->ents = realloc(alloc->ents,
+	                      sizeof(struct gindex_allocator_entry)
+	                      *(++alloc->numents));
 
-	allocator->num_entries++;
+	uint64_t index = alloc->numents - 1;
+	alloc->ents[index] = (struct gindex_allocator_entry) {true, 0};
 
-	allocator->entries[allocator->num_entries - 1].is_live = true;
-	allocator->entries[allocator->num_entries - 1].gen = 0;
-
-	struct gindex gi;
-	gi.index = allocator->num_entries - 1;
-	gi.gen = 0;
+	struct gindex gi = {index, 0};
 
 	return gi;
 }
 
-bool gfree(struct gindex_allocator *allocator,
+bool gfree(struct gindex_allocator *alloc,
            struct gindex gi)
 {
-	if (gi.index > allocator->num_entries)
+	if (gi.index > alloc->numents)
 		return false;
 
-	allocator->entries[gi.index].is_live = false;
+	alloc->ents[gi.index].islive = false;
 
-	allocator->free = realloc(allocator->free,
-	                          sizeof(uint64_t)*(allocator->num_free + 1));
+	alloc->free = realloc(alloc->free,
+	                      sizeof(uint64_t)*(++alloc->numfree));
 
-	allocator->num_free++;
-
-	allocator->free[allocator->num_free - 1] = gi.index;
+	alloc->free[alloc->numfree - 1] = gi.index;
 	return true;
 }
 
-bool is_live(struct gindex_allocator allocator,
-             struct gindex gi)
+bool islive(struct gindex_allocator alloc,
+            struct gindex gi)
 {
-	if (gi.index > allocator.num_entries
-	    || gi.gen != allocator.entries[gi.index].gen)
+	if (gi.index > alloc.numents
+	    || gi.gen != alloc.ents[gi.index].gen)
 		return false;
 
-	return allocator.entries[gi.index].is_live;
+	return alloc.ents[gi.index].islive;
 }

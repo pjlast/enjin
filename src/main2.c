@@ -11,61 +11,61 @@ bool load_media(const char **files, SDL_Texture **textures, int num_files,
                 SDL_Renderer *renderer);
 SDL_Texture *load_texture(const char *path, SDL_Renderer *renderer);
 
-int DrawSystem(struct gamestate *gs, struct gindex entity, int posindex, int drawindex, SDL_Renderer *renderer) {
-	struct position **positions = (struct position**) gs->components[posindex];
-	struct draw **draws = (struct draw**) gs->components[drawindex];
-	if (!positions[entity.index])
+int draw_system(struct gamestate *gs, struct gindex e, int posindex, int drawindex, SDL_Renderer *renderer) {
+	struct position **positions = (struct position**) gs->comps[posindex];
+	struct draw **draws = (struct draw**) gs->comps[drawindex];
+	if (!positions[e.index])
 		return 1;
-	if (!draws[entity.index])
+	if (!draws[e.index])
 		return 1;
 	SDL_Rect DestR;
-	DestR.x = positions[entity.index]->x;
-	DestR.y = positions[entity.index]->y;
+	DestR.x = positions[e.index]->x;
+	DestR.y = positions[e.index]->y;
 	int w, h;
-	SDL_QueryTexture(draws[entity.index]->texture, NULL, NULL, &w, &h);
+	SDL_QueryTexture(draws[e.index]->texture, NULL, NULL, &w, &h);
 	DestR.w = w;
 	DestR.h = h;
 
-	SDL_RenderCopy(renderer, draws[entity.index]->texture, NULL,
+	SDL_RenderCopy(renderer, draws[e.index]->texture, NULL,
 	               &DestR);
 	return 0;
 } 
 
-int physics_system(struct gamestate *gs, struct gindex entity, int phys_index, int pos_index, int col_index)
+int physics_system(struct gamestate *gs, struct gindex e, int phys_index, int pos_index, int col_index)
 {
-	struct physics **physicss = (struct physics**) gs->components[phys_index];
-	struct position **positions = (struct position**) gs->components[pos_index];
-	struct collision **collisions = (struct collision**) gs->components[col_index];
-	if (!positions[entity.index])
+	struct physics **physicss = (struct physics**) gs->comps[phys_index];
+	struct position **positions = (struct position**) gs->comps[pos_index];
+	struct collision **collisions = (struct collision**) gs->comps[col_index];
+	if (!positions[e.index])
 		return 1;
-	if (!physicss[entity.index])
+	if (!physicss[e.index])
 		return 1;
-	if (!collisions[entity.index])
+	if (!collisions[e.index])
 		return 1;
 
 
-	for (uint64_t i = 0; i < gs->allocator.num_entries; i++) {
+	for (uint64_t i = 0; i < gs->alloc.numents; i++) {
 		if (!collisions[i])
 			continue;
-		if (entity.index != i) {
-			SDL_Rect nextbox = collisions[entity.index]->box;
-			nextbox.x += physicss[entity.index]->velocity_x*1/60.0;
-			nextbox.y += physicss[entity.index]->velocity_y*1/60.0;
+		if (e.index != i) {
+			SDL_Rect nextbox = collisions[e.index]->box;
+			nextbox.x += physicss[e.index]->velocity_x*1/60.0;
+			nextbox.y += physicss[e.index]->velocity_y*1/60.0;
 			if (check_collision(nextbox, collisions[i]->box)) {
-				//physicss[entity.index]->velocity_y = 0;
+				//physicss[e.index]->velocity_y = 0;
 				return 1;
 			}
 		}
 	}
 
-	if (entity.index == 1)
-		physicss[entity.index]->velocity_y += 980*1/60.0;
+	if (e.index == 1)
+		physicss[e.index]->velocity_y += 980*1/60.0;
 
-	positions[entity.index]->x += physicss[entity.index]->velocity_x*1/60.0;
-	positions[entity.index]->y += physicss[entity.index]->velocity_y*1/60.0;
-	if (collisions[entity.index]) {
-		collisions[entity.index]->box.x = positions[entity.index]->x + collisions[entity.index]->offset_x;
-		collisions[entity.index]->box.y = positions[entity.index]->y + collisions[entity.index]->offset_y;
+	positions[e.index]->x += physicss[e.index]->velocity_x*1/60.0;
+	positions[e.index]->y += physicss[e.index]->velocity_y*1/60.0;
+	if (collisions[e.index]) {
+		collisions[e.index]->box.x = positions[e.index]->x + collisions[e.index]->offset_x;
+		collisions[e.index]->box.y = positions[e.index]->y + collisions[e.index]->offset_y;
 	}
 	return 0;
 }
@@ -127,13 +127,13 @@ int main()
 			} else if (e.type == SDL_KEYDOWN) {
 				switch (e.key.keysym.sym) {
 				case SDLK_UP:
-					((struct physics**) gs.components[PHYS_INDEX])[1]->velocity_y = -700;
+					((struct physics**) gs.comps[PHYS_INDEX])[1]->velocity_y = -700;
 					break;
 				case SDLK_RIGHT:
-					((struct physics**) gs.components[PHYS_INDEX])[1]->velocity_x = 300;
+					((struct physics**) gs.comps[PHYS_INDEX])[1]->velocity_x = 300;
 					break;
 				case SDLK_LEFT:
-					((struct physics**) gs.components[PHYS_INDEX])[1]->velocity_x = -300;
+					((struct physics**) gs.comps[PHYS_INDEX])[1]->velocity_x = -300;
 					break;
 				}
 			}
@@ -141,7 +141,7 @@ int main()
 				switch (e.key.keysym.sym) {
 				case SDLK_RIGHT:
 				case SDLK_LEFT:
-					((struct physics**) gs.components[PHYS_INDEX])[1]->velocity_x = 0;
+					((struct physics**) gs.comps[PHYS_INDEX])[1]->velocity_x = 0;
 					break;
 				}
 			}
@@ -149,11 +149,11 @@ int main()
 
 		SDL_RenderClear(renderer);
 		// Systems logic here
-		for (uint64_t i = 0; i < gs.allocator.num_entries; i++) {
-			if (is_live(gs.allocator, gs.entities[i])) {
-				//updatePositionSystem(&gs, gs.entities[i], POSITION_INDEX);
-				DrawSystem(&gs, gs.entities[i], POSITION_INDEX, DRAW_INDEX, renderer);
-				physics_system(&gs, gs.entities[i],PHYS_INDEX, POSITION_INDEX, COL_INDEX);
+		for (uint64_t i = 0; i < gs.alloc.numents; i++) {
+			if (islive(gs.alloc, gs.ents[i])) {
+				//updatePositionSystem(&gs, gs.ents[i], POSITION_INDEX);
+				draw_system(&gs, gs.ents[i], POSITION_INDEX, DRAW_INDEX, renderer);
+				physics_system(&gs, gs.ents[i],PHYS_INDEX, POSITION_INDEX, COL_INDEX);
 			}
 		}
 		SDL_RenderPresent(renderer);
